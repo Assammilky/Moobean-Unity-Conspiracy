@@ -25,7 +25,7 @@ public class MainMenuScript : MonoBehaviour
 
     public void Quit(){
 
-    Application.quit()
+        Application.Quit();
 
     }
 
