@@ -16,7 +16,7 @@ public class CinemachinePOVExtension : CinemachineExtension
     protected override void Awake()
     {
         base.Awake();
-        startingRotation = transform.localRotation.eulerAngles;
+        startingRotation = Vector3.zero;
     }
 
     void Start()

@@ -44,7 +44,6 @@ public class InputManager : MonoBehaviour
         if (!CanMove) return Vector2.zero;
         return playerInput.Player.Movement.ReadValue<Vector2>();
     }
-
     public Vector2 GetLookInput()
     {
         if (!CanLook) return Vector2.zero;
@@ -52,13 +51,7 @@ public class InputManager : MonoBehaviour
     }
 
     // These are what your Interactor uses
-    public void SetMovement(bool state)
-    {
-        CanMove = state;
-    }
+    public void SetMovement(bool state) { CanMove = state; }
+    public void SetLook(bool state) { CanLook = state; }
 
-    public void SetLook(bool state)
-    {
-        CanLook = state;
-    }
 }
