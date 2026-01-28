@@ -17,9 +17,15 @@ public class MainMenuScript : MonoBehaviour
 
     public void Open_Settings(){
 
+    
+
+
+
     }
 
     public void Quit(){
+
+    Application.quit()
 
     }
 
