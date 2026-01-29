@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Reflection.Emit;
 using TMPro;
 using Unity.VisualScripting;
@@ -8,7 +9,8 @@ using UnityEngine;
 
 public class HintsManager : MonoBehaviour
 {
-
+    public static HintsManager inst;
+    private Camera mainCamera;
     [Header("Map")]
     [SerializeField] private List<GameObject> mapLines = new();
 
@@ -23,6 +25,9 @@ public class HintsManager : MonoBehaviour
 
     [SerializeField] private List<Vector2> mapDirections = new();
     private List<Vector2> finalMapDirections = new();
+
+    private List<int> mapEndOfPathDirections = new();
+    
 
      private List<string> mapRegularLetters = new List<string>(){ "A", "B", "C", "F", "G", "H", "I", "J", "K", "M", "O", "P", "Q", "T", "V", "X", "Y", "Z"};
     private enum HintDirection
@@ -48,15 +53,49 @@ public class HintsManager : MonoBehaviour
     }
 
     private HintDirection cubeDirection;
+    private int cubeDirectionCount;
     private HintDirection hexagonDirection;
+    private int hexagonDirectionCount;
 
     public List<TextMeshProUGUI> mapColumnLabels = new();
 
+
+    [Header("Tablet")]
+    public GameObject tabletFrontCanvas;
+    public GameObject tabletBackCanvas;
+    public List<int> tabletHexagonCode = new();
+
+    private enum TabletPath
+    {
+        Map,
+        Hexagon,
+        Cube,
+        none
+    }
+    private TabletPath currentTabletPath = TabletPath.none;
+    public int pathProgress;
+
+    private int[] currentTabletNumbers = new int[4];
+    private List<int> availableTabletNumbers = new();
+
+    private List<int> availableTabletNumbersPool = new(){1, 2, 3, 4, 5, 6, 7};
+
+    private int currentTabletCenterNumber;
+
+    private bool tabletFacingReverse = false;
+
+    [SerializeField] private GameObject canvasRotationReference;
+    
+
     void Awake()
     {
+        mainCamera = Camera.main;
+        inst = this;
         NewMap();
+        GenerateTabletCodes();
     }
 
+    
     private void Reset()
     {
         //lines
@@ -66,6 +105,105 @@ public class HintsManager : MonoBehaviour
         }
         NewMap();
     }
+
+
+    public void StartRotateTablet(Vector3 direction, bool sideInput)
+    {
+        availableTabletNumbers = new(availableTabletNumbersPool);
+        availableTabletNumbers.Remove(currentTabletCenterNumber);
+        currentTabletCenterNumber = currentTabletNumbers[TabletDirection(direction) - 1];
+        if(!tabletFacingReverse)
+        {
+            SpawnOuterNumbers(tabletBackCanvas.transform, direction);
+        }
+        else
+        {
+            SpawnOuterNumbers(tabletFrontCanvas.transform, direction);
+        }
+    }
+
+    public void EndRotateTablet(Vector3 direction, bool sideInput)
+    {
+        if(tabletFacingReverse)
+        {
+            tabletFrontCanvas.transform.rotation = canvasRotationReference.transform.rotation;
+        }
+        else
+        {
+            tabletBackCanvas.transform.rotation = canvasRotationReference.transform.rotation;
+        }
+        tabletFacingReverse = !tabletFacingReverse;
+        
+    }
+
+    private void SpawnOuterNumbers(Transform canvas, Vector3 direction)
+    {
+        SpawnCenterNumber(canvas);
+        currentTabletNumbers = new int[4];
+
+        switch(currentTabletPath)
+        {
+            case TabletPath.Map:
+            pathProgress++;
+            canvas.GetChild(TabletDirection(direction)).GetComponent<TextMeshProUGUI>().text = "" + 8 + pathProgress;
+            currentTabletNumbers[TabletDirection(direction)] = 8 + pathProgress;
+            for(int i = 0; i < 4; i++)
+                {
+                    if(currentTabletNumbers[i] == 0)
+                    {
+                        currentTabletNumbers[i] = SpawnTabletNumber(availableTabletNumbers,  canvas.GetChild(i + 1).GetComponent<TextMeshProUGUI>());
+                        availableTabletNumbers.Remove(currentTabletNumbers[i]);
+                    }
+                }
+                break;
+            case TabletPath.none:
+            pathProgress = 0;
+            for(int i = 0; i < 4; i++)
+                {
+                    if(currentTabletNumbers[i] == 0)
+                    {
+                        currentTabletNumbers[i] = SpawnTabletNumber(availableTabletNumbers,  canvas.GetChild(i + 1).GetComponent<TextMeshProUGUI>());
+                        availableTabletNumbers.Remove(currentTabletNumbers[i]);
+                    }
+                }
+                break;
+
+        }
+    }
+
+    private void SpawnCenterNumber(Transform canvas)
+    {
+        canvas.GetChild(0).GetComponent<TextMeshProUGUI>().text = currentTabletCenterNumber + "";
+    }
+
+    private int SpawnTabletNumber(List<int> availableNumbers, TextMeshProUGUI textTarget)
+    {
+        int number = availableNumbers[Random.Range(0, availableNumbers.Count)];
+        textTarget.text = "" + number;
+        return number;
+    }
+
+    private void GenerateTabletCodes()
+    {
+        for(int i = 0; i < hexagonDirectionCount; i++)
+        {
+            int nextNumber = Random.Range(1, 8);
+            tabletHexagonCode.Add(nextNumber);
+            MaskInputManager.inst.hexagonAnswer[nextNumber - 1] = !MaskInputManager.inst.hexagonAnswer[nextNumber - 1];
+        }
+        for(int i = 0; i < cubeDirectionCount; i++)
+        {
+            int nextNumber = Random.Range(1, 5);
+            tabletHexagonCode.Add(nextNumber);
+            //MaskInputManager.inst.hexagonAnswer[nextNumber] = !MaskInputManager.inst.hexagonAnswer[nextNumber];
+        }
+    }
+
+    //1, 2, 4, 2, 3, 1
+    //1, 2, 1, 2, 6, 1
+    //3, 4, 1, 2, 3, 1
+    //3, 4, 6, 3, 4, 6
+
     private void NewMap()
     {
         GenerateFinalGridSteps();
@@ -77,7 +215,9 @@ public class HintsManager : MonoBehaviour
         finalMapDirections = new();
         for(int i = 0; i < 3; i++)
         {
-            finalMapDirections.Add(mapDirections[Random.Range(0, mapDirections.Count)]);
+            int direction = Random.Range(0, mapDirections.Count);
+            finalMapDirections.Add(mapDirections[direction]);
+            mapEndOfPathDirections.Add(direction + 1);
         }
     }
 
@@ -138,6 +278,7 @@ public class HintsManager : MonoBehaviour
                 LetterHintDirection chosenHintDirection = tempLetters[hintIndex];
                 LetterHintDirection otherHintDirection = tempLetters[-(hintIndex % 2 * 2 - 1) + hintIndex];
                 cubeDirection = chosenHintDirection.direction;
+                cubeDirectionCount = Mathf.RoundToInt(cubePosition.y);
                 mapColumnLabels[i].text = chosenHintDirection.label;
                 tempLetters.Remove(chosenHintDirection);
                 tempLetters.Remove(otherHintDirection);
@@ -148,6 +289,7 @@ public class HintsManager : MonoBehaviour
                 LetterHintDirection chosenHintDirection = tempLetters[hintIndex];
                 LetterHintDirection otherHintDirection = tempLetters[-(hintIndex % 2 * 2 - 1) + hintIndex];
                 hexagonDirection = chosenHintDirection.direction;
+                hexagonDirectionCount = Mathf.RoundToInt(hexagonPosition.y);
                 mapColumnLabels[i].text = chosenHintDirection.label;
                 tempLetters.Remove(chosenHintDirection);
                 tempLetters.Remove(otherHintDirection);
@@ -171,11 +313,23 @@ public class HintsManager : MonoBehaviour
     }
 
 
-    int mod(int x, int m) {
+    int mod(int x, int m) 
+    {
     return (x%m + m)%m;
-}
+    }
     private int GetCellFromIndex(Vector2 cell)
     {
         return (int)cell.y * 7 + (int)cell.x;
+    }
+
+    private int TabletDirection(Vector3 direction)
+    {
+        //x - 1, abs, + 2
+        //1, 0, 0, 2
+        //-1, -2, 2, 4
+        //z - 1, abs, + 1
+        Debug.Log(direction);
+        Debug.Log((int)Mathf.Abs((Mathf.Abs(direction.x - 1) + 2) * direction.x + (Mathf.Abs(direction.z - 1) + 1) * direction.z));
+        return (int)Mathf.Abs((Mathf.Abs(direction.x - 1) + 2) * direction.x + (Mathf.Abs(direction.z - 1) + 1) * direction.z);
     }
 }
