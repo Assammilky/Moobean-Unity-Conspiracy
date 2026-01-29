@@ -1,8 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-public class ObjectGrabbable : MonoBehaviour
+public class ObjectGrabbable : MonoBehaviour, IGrabbable
 {
     [SerializeField] private float lerpSpeed = 8f;
     [SerializeField] private float slerpSpeed = 2f;

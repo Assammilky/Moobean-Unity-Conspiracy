@@ -3,15 +3,27 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
+public interface IGrabbable
+{
+    void Grab(Transform grabPoint);
+    void Release();
+}
+
+
 public class Interactor : MonoBehaviour
 {
+    [Header("References")]
     [SerializeField] private Transform playerCameraTransform;
     [SerializeField] private Transform objectGrabPointTransform;
+
+    [Header("Settings")]
     [SerializeField] private float interactionRange = 3f;
     [SerializeField] private LayerMask pickupLayerMask;
 
-    private ObjectGrabbable grabbedObject;
     private InputManager inputManager;
+
+    // Current grabbed object (can be any type that implements IGrabbable)
+    private IGrabbable grabbedObject;
 
     private void Start()
     {
@@ -38,12 +50,12 @@ public class Interactor : MonoBehaviour
         if (Physics.Raycast(playerCameraTransform.position, playerCameraTransform.forward,
             out RaycastHit hit, interactionRange, pickupLayerMask))
         {
-            if (hit.transform.TryGetComponent(out ObjectGrabbable grabbable))
+            // Try to find any grabbable object (using interface for flexibility)
+            if (hit.transform.TryGetComponent(out IGrabbable grabbable))
             {
                 grabbedObject = grabbable;
                 grabbedObject.Grab(objectGrabPointTransform);
 
-                // Freeze player + camera
                 inputManager.SetMovement(false);
                 inputManager.SetLook(false);
             }
@@ -52,10 +64,11 @@ public class Interactor : MonoBehaviour
 
     private void ReleaseObject()
     {
+        if (grabbedObject == null) return;
+
         grabbedObject.Release();
         grabbedObject = null;
 
-        // Re-enable player + camera
         inputManager.SetMovement(true);
         inputManager.SetLook(true);
     }
