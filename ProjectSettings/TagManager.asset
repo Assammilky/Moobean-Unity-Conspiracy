@@ -12,7 +12,11 @@ TagManager:
   - Water
   - UI
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   - PickUp
+=======
+  - Camera
+>>>>>>> Stashed changes
 =======
   - Camera
 >>>>>>> Stashed changes
