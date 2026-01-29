@@ -10,7 +10,7 @@ public class ImagePair
 
 public class ImageCube : MonoBehaviour
 {
-    [Header("Planes (opposites)")]
+    // Six renderers for the cube's faces
     public Renderer right;
     public Renderer left;
 
@@ -20,22 +20,18 @@ public class ImageCube : MonoBehaviour
     public Renderer front;
     public Renderer back;
 
-    [Header("All fixed image pairs (16 images = 8 pairs)")]
+    // All possible image pairs
     public ImagePair[] allPairs;
 
-    [Header("Empty material")]
+    // Material to use for the missing face
     public Material emptyMaterial;
 
+    // Pairs of renderers for each axis
     private Renderer[][] planePairs;
 
     void Start()
     {
-        if (allPairs.Length < 3)
-        {
-            Debug.LogError("You need at least 3 image pairs.");
-            return;
-        }
-
+        // Initialize the plane pairs
         planePairs = new Renderer[][]
         {
             new Renderer[]{ right, left },
@@ -43,7 +39,7 @@ public class ImageCube : MonoBehaviour
             new Renderer[]{ front, back }
         };
 
-        // Shuffle all available pairs
+        // Shuffle and select image pairs
         List<ImagePair> shuffledPairs = new List<ImagePair>(allPairs);
         for (int i = 0; i < shuffledPairs.Count; i++)
         {
@@ -51,12 +47,10 @@ public class ImageCube : MonoBehaviour
             (shuffledPairs[i], shuffledPairs[rand]) = (shuffledPairs[rand], shuffledPairs[i]);
         }
 
-        // Take only the first 3 pairs for this cube
         ImagePair[] chosenPairs = new ImagePair[3];
         for (int i = 0; i < 3; i++)
             chosenPairs[i] = shuffledPairs[i];
 
-        // Choose which pair is broken
         int brokenPairIndex = Random.Range(0, 3);
         int missingSide = Random.Range(0, 2); // 0 or 1
 
@@ -67,14 +61,12 @@ public class ImageCube : MonoBehaviour
 
             if (i == brokenPairIndex)
             {
-                // One side empty, the other side gets ONE image from the pair
                 planes[missingSide].material = emptyMaterial;
                 planes[1 - missingSide].material =
                     Random.value < 0.5f ? pair.a : pair.b;
             }
             else
             {
-                // Normal pair: A on one side, B on the opposite
                 planes[0].material = pair.a;
                 planes[1].material = pair.b;
             }
