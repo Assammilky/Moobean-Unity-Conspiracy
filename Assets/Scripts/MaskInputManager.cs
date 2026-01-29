@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class MaskInputManager : MonoBehaviour
 {
+    static public MaskInputManager inst;
     [SerializeField] private GameObject maskInputNode;
     [SerializeField] private List<GameObject> submitButtons;
 
@@ -34,6 +35,8 @@ public class MaskInputManager : MonoBehaviour
     public List<bool> markingGuess = new();
 
     private void Awake() {
+
+        inst = this;
         SpawnGridNodes();
         SpawnHexagonLists();
         SpawnMarkingsLists();
@@ -110,71 +113,7 @@ public class MaskInputManager : MonoBehaviour
             markingGuess[markingInputNodes.IndexOf(node)] = !thisNodeSelected;
             node.transform.GetChild(0).GetChild(0).gameObject.SetActive(!thisNodeSelected);
                 break;
-            /*
-            int index = markingInputNodes.IndexOf(node);
-            thisNodeSelected = node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.IsKeywordEnabled("_EMISSIVE");
-            markingGuess[index] = !thisNodeSelected;
-            Debug.Log("marking clicked");
-            
-            if(!thisNodeSelected)
-            {
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.EnableKeyword("_EMISSIVE");
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.SetColor("_EmissionColor", PurpleGlowMaterial.GetColor("_EmissionColor"));
-            }
-            else
-            {
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.DisableKeyword("_EMISSIVE");
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.globalIlluminationFlags = MaterialGlobalIlluminationFlags.EmissiveIsBlack;
-            }
-                break;*/
-            /*
-            if (!thisNodeSelected)
-                {
-                    Debug.Log("selecting now");
-                    markingMaterials[index].EnableKeyword("_EMISSIVE");
-                    markingMaterials[index].globalIlluminationFlags = MaterialGlobalIlluminationFlags.RealtimeEmissive;
-                    node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material = markingMaterials[index];
-                }
-            else
-            markingMaterials[index].DisableKeyword("_EMISSIVE");*/
-            
-/*
-            if (!thisNodeSelected)
-            {
-                Material changedMaterial = node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material;
-                changedMaterial.EnableKeyword("_EMISSIVE");
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material = changedMaterial;
-            }
-            else
-            {
-                Material changedMaterial = node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material;
-                changedMaterial.DisableKeyword("_EMISSIVE");
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material = changedMaterial;
-            }*/
-            /*if(thisNodeSelected)
-            node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.EnableKeyword("_EMISSIVE");
-            else
-            node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material.DisableKeyword("_EMISSIVE");
-                break;*/
         }
-
-        /*
-        if (thisNodeSelected)
-            {
-                Material changedMaterial = node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material;
-                changedMaterial.EnableKeyword("_EMISSIVE");
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material = changedMaterial;
-            }
-            else
-            {
-                Material changedMaterial = node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material;
-                changedMaterial.DisableKeyword("_EMISSIVE");
-                node.transform.GetChild(0).GetChild(0).GetComponent<MeshRenderer>().material = changedMaterial;
-            }
-                break;
-                */
-       
     }
 
     private IEnumerator SubmitGuess(int dialIndex)
@@ -189,10 +128,10 @@ public class MaskInputManager : MonoBehaviour
                 correct = SubmitGridGuess();
                 break;
             case 1:
-                correct = SubmitHexagonGuess(); //change these
+                correct = SubmitHexagonGuess();
                 break;
             case 2:
-                correct =  SubmitMarkingsGuess();
+                correct = SubmitMarkingsGuess();
                 break;
         }
 
