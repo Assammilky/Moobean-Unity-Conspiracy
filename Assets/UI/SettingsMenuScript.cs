@@ -18,13 +18,13 @@ public class SettingsMenuScript : MonoBehaviour
     public void ChangeMusicVolume()
 
     {
-        AudioMixer.SetFloat("MusicVolume", MasterVolume.value);
+        AudioMixer.SetFloat("MusicVolume", MusicVolume.value);
     }
 
     public void ChangeSFXVolume()
 
     {
-        AudioMixer.SetFloat("SFXVolume", MasterVolume.value);
+        AudioMixer.SetFloat("SFXVolume", SFXVolume.value);
     }
 
 
