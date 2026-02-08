@@ -328,8 +328,8 @@ public class HintsManager : MonoBehaviour
         //1, 0, 0, 2
         //-1, -2, 2, 4
         //z - 1, abs, + 1
-        Debug.Log(direction);
-        Debug.Log((int)Mathf.Abs((Mathf.Abs(direction.x - 1) + 2) * direction.x + (Mathf.Abs(direction.z - 1) + 1) * direction.z));
+       // Debug.Log(direction);
+       // Debug.Log((int)Mathf.Abs((Mathf.Abs(direction.x - 1) + 2) * direction.x + (Mathf.Abs(direction.z - 1) + 1) * direction.z));
         return (int)Mathf.Abs((Mathf.Abs(direction.x - 1) + 2) * direction.x + (Mathf.Abs(direction.z - 1) + 1) * direction.z);
     }
 }

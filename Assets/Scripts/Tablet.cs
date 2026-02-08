@@ -23,10 +23,13 @@ public class Tablet : MonoBehaviour, IGrabbable
     private bool rotationLock = false;
 
     [SerializeField] private Transform centerPiece;
+    private Rigidbody centerPieceRB;
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        centerPieceRB = centerPiece.GetComponent<Rigidbody>();
+        //centerPiece.SetParent(centerPiece.parent, true);
     }
 
     public void Grab(Transform grabPointTransform)
@@ -55,29 +58,27 @@ public class Tablet : MonoBehaviour, IGrabbable
     {
         HintsManager.inst.StartRotateTablet(direction, direction.x != 0);
         rotationLock = true;
-        Vector3 originalRotation = centerPiece.localRotation.eulerAngles;
-        for(float timer = 0; timer < 1; timer += Time.deltaTime / rotateTime)
+        Vector3 originalRotation = transform.localEulerAngles;
+        float lastAngle = 0;
+        Debug.Log(originalRotation);
+        for(float timer = 0; timer < 1; timer += Time.fixedDeltaTime / rotateTime)
         {
             float easeOut = Mathf.Sin(timer * Mathf.PI * 0.5f);
-            if(direction.x == 0)
-            {
-                centerPiece.localRotation = Quaternion.Euler(0, 0, Mathf.Lerp(originalRotation.z, originalRotation.z - direction.z * 180, easeOut));
-            }
-            else
-            {
-                centerPiece.localRotation = Quaternion.Euler(Mathf.Lerp(originalRotation.x, originalRotation.x - direction.x * 180, easeOut), 0, 0);
-            }
-            // centerPiece.localRotation = Quaternion.Euler(Mathf.Lerp(originalRotation.x, originalRotation.x - direction.x * 180, easeOut), 0, Mathf.Lerp(originalRotation.z, originalRotation.z - direction.z * 180, easeOut));
-            yield return null;
+            float magnitude = easeOut - lastAngle;
+            float angleChange = 180f / rotateTime * magnitude;
+            Quaternion localRotation = Quaternion.Euler(angleChange * direction.x, 0, angleChange * direction.z);
+            centerPieceRB.MoveRotation(centerPieceRB.rotation * localRotation);
+
+            lastAngle = easeOut;
+            yield return new WaitForFixedUpdate();
         }
-       // centerPiece.localRotation = Quaternion.Euler(originalRotation.x - direction.x * 180,  0, originalRotation.z - direction.z * 180);
         rotationLock = false;
         HintsManager.inst.EndRotateTablet(direction, direction.x != 0);
     }
 
     private void Update()
     {
-        if (!isGrabbed || rotationLock) return;
+       if (!isGrabbed || rotationLock) return;
 
         if (Input.GetKeyDown(KeyCode.W))
         {
@@ -99,6 +100,10 @@ public class Tablet : MonoBehaviour, IGrabbable
 
     private void FixedUpdate()
     {
+
+        
+
+
         if (isGrabbed && grabPoint != null)
         {
             rb.MovePosition(Vector3.Lerp(rb.position, grabPoint.position, Time.fixedDeltaTime * lerpSpeed));
@@ -115,5 +120,14 @@ public class Tablet : MonoBehaviour, IGrabbable
                 isReturning = false;
             }
         }
+    }
+
+
+    private Vector3 RoundedVector(Vector3 vector, float roundBy)
+    {
+        vector.x = Mathf.Round(vector.x / roundBy) * roundBy;
+        vector.y = Mathf.Round(vector.y / roundBy) * roundBy;
+        vector.z = Mathf.Round(vector.z / roundBy) * roundBy;
+        return vector;
     }
 }
